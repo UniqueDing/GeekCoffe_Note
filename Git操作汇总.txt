@@ -1,0 +1,136 @@
+一、基本操作：
+git init
+git add .
+git commit -m "add some info"
+git status
+git diff
+git diff HEAD -- readme.txt    //查看工作区和版本库的最新区别
+git log 
+git log --pretty=oneline  //简洁地查看log
+git log --graph //查看分支合并图
+git relog //查看历史，以便重返回最新版本
+
+
+二、版本穿梭：
+git reset --hard  HEAD^  //回退到上一个版本
+git reset  --hard   commit_id
+git checkout -- readme.txt      // 撤销工作区的修改, 场景1
+git reset HEAD <file_name>    // 撤销添加到暂存区的修改变动, 场景2
+rm <file_name>    //删除工作区的文件
+git rm <file_name>    //删除版本库中的文件，因为已经commit过了，所以删除也算是一次修改
+
+
+三、远程仓库：[ Git支持多种协议传输，用ssh协议，原生的Git传输协议速度最快] 
+ssh-keygen -t rsa -C "youremail@example.com"   //创建SSH Key ,一般存放在 user/root/.ssh/id_rsa 和 id_rsa.pub
+git remote add origin git@github.com:GeekCoffee/Algorithms.git  //关联一个远程库
+git push -u origin master   //第一次向远程库推送内容
+git push origin master   //不是第一次向远程库推送内容
+git clone git@github.com:GeekCoffee/Algorithms.git   //复制一个代码库到本地master分支上
+git pull origin master  #拉取远程仓库最新的代码到本地来,
+                         本地的代码库会自动被git修改为最新的版本，
+						 在最新版本的基础之上再添加程序代码，pull之前，
+						 最好自己写的程序要在另一个dev分支上。
+
+
+
+四、分支管理与多人协作：[ 分支就是平行空间 ]
+git checkout -b  dev   //创建dev分支，切换到dev分支上
+git branch dev //创建分支dev
+git checkout dev  //切换到dev分支上
+git branch  //查看当前分支
+git merge dev //Fast-forwar模式，当前在master分支上，想把master合并到dev分支的提交点上
+git branch -d dev //删除dev分支
+git log --graph  --pretty=oneline  --abbrev-commit //查看分支合并图
+// 解决冲突，需要人工编辑，然后删除冲突的dev分支
+git merge --no-ff -m"merge with no-ff" dev  //普通模式合并，可以在log上看到合并图
+
+//把工作现场“存储起来”，此后使用git status是看不到的
+git stash 
+//干完突如其来的bug活之后，可以恢复现场了
+git stash list //查看需要恢复现场的信息
+git stash apply stash@{0} //回到现场stash@{0}，但是stash的信息没有删除
+git stash pop  //回到现场，并把stash信息也删除了
+
+
+//开发一个新feature，最好最新一个分支
+git branch -D <name>  // 丢弃一个没有被合并过的分支，可以强行删除
+
+
+//多人协作
+git remote -v     //查看远程库更详细的信息
+1）尝试git push origin <branch-name>推送自己的修改
+2）如果推送失败，则因为远程分支比你本地更新，需要git pull试图合并
+3）如果合并有冲突，则解决冲突，并在本地提交
+4）解决冲突后，再git push origin <branch-name>
+5）若git pull提示no tracking infomantion,说明本地分支和远程分支没有关联，
+使用git branch --set-upstream-to <branch-name> origin/<branch-name>
+git checkout -b branch-name origin/branch-name   //在本地创建和远程对应的分支
+git rebase  //可以把本地还没有push的分叉提交历史整理成直线
+
+
+
+
+五、标签管理：[ tag与某个commit_id绑定在一起，方便人们寻找 ]
+git tag v1.0 commit_id //新建一个标签，默认是HEAD指向的提交点
+git tag  //查看所以标签
+git show v0.9   //查看标签信息
+git tag -a v0.1 -m "version 0.1 released" commit_id
+
+git psuh origin v1.0  //推送一个本地标签到远程库
+git push origin --tags //推送全部本地标签
+git tag -d v1.0  //删除一个标签
+git push origin :refs/tags/v1.0  //删除一个远程标签
+
+
+六、Github相关知识：
+1）stars是关注一个开源项目的人数个数，以及进度
+2）Followers 是你的跟随者
+3）Following 是你关注的人
+4）Fork 是拷贝一个源码库到自己的仓库中
+
+//贡献代码流程：
+找到官方开源项目->fork到远程仓库
+->git clone git@github.com:GeekCoffee/bootstrap.git，复制到本地
+->添加新功能或者修改bug ，干完活，push origin到远程仓库
+->在Github上发起一个pull request，等待官方接受
+
+
+
+七、自定义Git:
+git config --global color.ui true  //让Git显示颜色
+git config --global alias.logplus "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+
+
+
+//搭建小型Git服务器
+第一步：在CentOS上安装Git服务
+1) yum info git //查看yum源仓库的git版本信息  , 目前比较新的是2.10.2
+2) yum -y install git // 下载git
+3) 命令：groupadd git #添加git用户组, useradd git -g git  #添加git用户,   passwd git =》设置为xxxxxx
+
+
+第二步：创建证书登录
+1)创建/home/git/.ssh/authorized_keys ，把id_rsa.pub公钥放进文件里就行了，一个公钥一行
+
+第三步：初始化git仓库
+1) 创建/srv/sample.git目录 ，git init --bare sample.git  //创建一个裸仓库，裸仓库没有工作区，所以在上面改不了文件
+2) chown -R git:git sample.git //服务器上的仓库都以.git结尾，然后把owner改为git
+
+
+第四步：禁用git用户shell登录
+1)vim /etc/passwd   ,把git:x:1001:1001:,,,:/home/git:/bin/bash 改为 git:x:1001:1001:,,,:/home/git:/usr/bin/git-shell
+
+第五步：克隆远程仓库到本地( 不需要再进行关联了，因为已经关联过了 )
+git clone git@192.168.0.10:/srv/sample.git
+
+第六步：在本地做相应的修改，推送等....
+
+
+
+
+
+
+
+
+
+
